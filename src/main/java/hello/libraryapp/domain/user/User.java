@@ -1,7 +1,12 @@
 package hello.libraryapp.domain.user;
 
+import hello.libraryapp.domain.user.loanhistory.UserLoanHistory;
+import hello.libraryapp.domain.user.loanhistory.UserLoanHistoryRepository;
 import jakarta.persistence.*;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -17,6 +22,9 @@ public class User {
     //@Column 어노테이션도 생략가능
     private Integer age;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserLoanHistory> userLoanHistoryList = new ArrayList<>();
+
     protected User() {
     }
 
@@ -31,6 +39,18 @@ public class User {
     public void updateName(String name){
         this.name = name;
 
+    }
+
+    public void loanBook(String bookName){
+        this.userLoanHistoryList.add(new UserLoanHistory(this, bookName));
+    }
+
+    public void returnBook(String bookName){
+        UserLoanHistory targetHistory = this.userLoanHistoryList.stream()
+                .filter(history -> history.getBookName().equals(bookName))
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
+        targetHistory.doReturn();
     }
 
 }
